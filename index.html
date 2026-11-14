@@ -1,16 +1,305 @@
+아래 코드를 **깃허브의 기존 HTML 전체와 교체**하세요. 이미지에 맞춘 색상을 포함했습니다.
+
+단, 코치 연결 주소는 기존 정보로 구성한 추정 주소라 실제 연결은 확인이 필요합니다.
+
+```html
 <!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>조각연습실 코치</title>
+
   <style>
-    body { margin: 0; }
-    iframe { display: block; width: 100%; height: 100vh; height: 100dvh; border: 0; }
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+      background: #F3EFE9;
+      color: #292D29;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    }
+
+    .coach {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+      background: #F3EFE9;
+    }
+
+    .header {
+      padding: 24px 28px 12px;
+      background: #F3EFE9;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    #status {
+      margin: 0;
+      padding: 12px 28px;
+      font-size: 14px;
+    }
+
+    #webchat {
+      flex: 1;
+      min-height: 0;
+    }
+
+    #fallback {
+      padding: 0 28px 20px;
+      font-size: 14px;
+    }
+
+    #fallback a {
+      color: #49315F;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
   </style>
 </head>
+
 <body>
-  <iframe title="조각연습실 코치 대화"
-    src="https://copilotstudio.microsoft.com/environments/4950c877-33c2-e096-ac60-f5b5afd14db4/bots/cr765_bot_GhZVR6/webchat?__version__=2&amp;enableFileAttachment=true&amp;cliAgent=true"></iframe>
+  <div class="coach">
+    <header class="header">
+      <h1>대화</h1>
+    </header>
+
+    <p id="status" role="status">
+      코치에 연결하고 있어요…
+    </p>
+
+    <div
+      id="webchat"
+      role="main"
+      aria-label="조각연습실 코치 대화"
+    ></div>
+
+    <div id="fallback" hidden>
+      <a href="https://copilotstudio.microsoft.com/environments/4950c877-33c2-e096-ac60-f5b5afd14db4/bots/cr765_bot_GhZVR6/webchat?__version__=2&amp;enableFileAttachment=true&amp;cliAgent=true">
+        기존 코치 화면 열기
+      </a>
+    </div>
+  </div>
+
+  <script src="https://cdn.botframework.com/botframework-webchat/latest/webchat.js"></script>
+
+  <script>
+    // 기존 iframe 주소의 코치 정보입니다.
+    const environmentId = "4950c877-33c2-e096-ac60-f5b5afd14db4";
+    const botName = "cr765_bot_GhZVR6";
+
+    // 아래 연결 주소는 기존 정보로 구성한 추정 주소입니다.
+    const environmentHost =
+      environmentId.replaceAll("-", "") +
+      ".environment.api.powerplatform.com";
+
+    const apiRoot =
+      `https://${environmentHost}/powervirtualagents`;
+
+    const apiVersion = "2022-03-01-preview";
+
+    // 연결 실패 시 Copilot Studio의 실제 토큰 엔드포인트로 교체하세요.
+    const tokenEndpoint =
+      `${apiRoot}/botsbyschema/${botName}/directline/token` +
+      `?api-version=${apiVersion}`;
+
+    // 첨부 이미지에 맞춘 색상 설정
+    const styleOptions = {
+      // 전체 배경: 크림색
+      backgroundColor: "#F3EFE9",
+
+      // 코치 말풍선: 흰색
+      bubbleBackground: "#FFFFFF",
+      bubbleTextColor: "#292D29",
+      bubbleBorderColor: "#FFFFFF",
+      bubbleBorderWidth: 0,
+      bubbleBorderRadius: 0,
+      bubbleNubSize: 0,
+
+      // 사용자 말풍선: 민트색
+      bubbleFromUserBackground: "#ADD8D0",
+      bubbleFromUserTextColor: "#253D36",
+      bubbleFromUserBorderColor: "#ADD8D0",
+      bubbleFromUserBorderWidth: 0,
+      bubbleFromUserBorderRadius: 0,
+      bubbleFromUserNubSize: 0,
+
+      // 추천 질문 버튼: 연보라색
+      suggestedActionBackgroundColor: "#E7DFEB",
+      suggestedActionBackgroundColorOnHover: "#D9CDE0",
+      suggestedActionTextColor: "#49414D",
+      suggestedActionBorderColor: "#E7DFEB",
+      suggestedActionBorderWidth: 0,
+      suggestedActionBorderRadius: 0,
+      suggestedActionLayout: "flow",
+
+      // 입력창: 흰색
+      sendBoxBackground: "#FFFFFF",
+      sendBoxTextColor: "#292D29",
+      sendBoxPlaceholderColor: "#898780",
+      sendBoxBorderTop: "1px solid #B7AFB6",
+
+      // 보내기 아이콘: 짙은 초록색
+      sendBoxButtonColor: "#172019",
+      sendBoxButtonColorOnHover: "#354B3C",
+
+      // 글꼴과 간격
+      primaryFont:
+        '"Malgun Gothic", "Apple SD Gothic Neo", sans-serif',
+      paddingRegular: 12,
+      paddingWide: 20,
+
+      // 파일 첨부 유지
+      hideUploadButton: false,
+
+      accent: "#172019"
+    };
+
+    async function fetchJSON(url) {
+      const response = await fetch(url, {
+        signal: AbortSignal.timeout(15000)
+      });
+
+      if (!response.ok) {
+        throw new Error(`연결 오류: ${response.status}`);
+      }
+
+      return response.json();
+    }
+
+    function showError(message) {
+      const status = document.getElementById("status");
+
+      status.hidden = false;
+      status.textContent = message;
+
+      document.getElementById("fallback").hidden = false;
+    }
+
+    async function startChat() {
+      try {
+        if (!window.WebChat) {
+          throw new Error("채팅 라이브러리를 불러오지 못했습니다.");
+        }
+
+        // 토큰 엔드포인트를 교체하면 지역 설정 주소도 함께 계산합니다.
+        const endpointURL = new URL(tokenEndpoint);
+        const pathPosition =
+          endpointURL.pathname.indexOf("/powervirtualagents/");
+
+        if (pathPosition < 0) {
+          throw new Error("토큰 엔드포인트 형식을 확인해야 합니다.");
+        }
+
+        const regionalRoot =
+          endpointURL.origin +
+          endpointURL.pathname.slice(0, pathPosition) +
+          "/powervirtualagents";
+
+        const regionalVersion =
+          endpointURL.searchParams.get("api-version") || apiVersion;
+
+        const regionalSettingsURL =
+          `${regionalRoot}/regionalchannelsettings` +
+          `?api-version=${encodeURIComponent(regionalVersion)}`;
+
+        const [settings, conversation] = await Promise.all([
+          fetchJSON(regionalSettingsURL),
+          fetchJSON(tokenEndpoint)
+        ]);
+
+        const directLineURL =
+          settings.channelUrlsById?.directline;
+
+        if (!directLineURL || !conversation.token) {
+          throw new Error("코치 연결 정보를 확인하지 못했습니다.");
+        }
+
+        const directLine = window.WebChat.createDirectLine({
+          domain:
+            directLineURL.replace(/\/$/, "") + "/v3/directline",
+          token: conversation.token
+        });
+
+        let greetingSent = false;
+
+        const store = window.WebChat.createStore(
+          {},
+          ({ dispatch }) => next => action => {
+            const result = next(action);
+
+            if (
+              action.type === "DIRECT_LINE/CONNECT_FULFILLED" &&
+              !greetingSent
+            ) {
+              greetingSent = true;
+
+              dispatch({
+                type: "DIRECT_LINE/POST_ACTIVITY",
+                meta: { method: "keyboard" },
+                payload: {
+                  activity: {
+                    type: "event",
+                    name: "startConversation",
+                    channelData: {
+                      postBack: true
+                    }
+                  }
+                }
+              });
+            }
+
+            return result;
+          }
+        );
+
+        window.WebChat.renderWebChat(
+          {
+            directLine,
+            store,
+            styleOptions,
+            locale: "ko-KR",
+            sendBoxPlaceholder: "배우고 싶은 부분을 적어보세요"
+          },
+          document.getElementById("webchat")
+        );
+
+        directLine.connectionStatus$.subscribe(status => {
+          if (status === 2) {
+            document.getElementById("status").hidden = true;
+            document.getElementById("fallback").hidden = true;
+          } else if (
+            status === 3 ||
+            status === 4 ||
+            status === 5
+          ) {
+            showError(
+              "코치 연결이 종료되었거나 실패했습니다. " +
+              "새로고침하거나 기존 코치를 열어주세요."
+            );
+          }
+        });
+      } catch (error) {
+        showError(
+          "코치에 연결하지 못했습니다. " +
+          "연결 주소 또는 코치의 인증 설정을 확인해야 합니다."
+        );
+      }
+    }
+
+    startChat();
+  </script>
 </body>
 </html>
+```
